@@ -34,3 +34,10 @@ tags
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Vagrant values
+# General
+.vagrant/
+
+# Log files (if you are creating logs in debug mode, uncomment this)
+*.log
