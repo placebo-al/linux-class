@@ -10,13 +10,15 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.memory = "3072"
   end
-  
- config.vm.provision "shell", inline: <<-SHELL
-  echo "syntax on" > ~/.vimrc
-  echo "set nocompatible" >> ~/.vimrc
-  echo "filetype on" >> ~/.vimrc
-  echo "filetype plugin on" >> ~/.vimrc
-  echo "filetype indent on" >> ~/.vimrc
 
- SHELL
+  config.vm.provision "shell", path: "install.sh"
+  
+#  config.vm.provision "shell", inline: <<-SHELL
+#   echo "syntax on" > ~/.vimrc
+#   echo "set nocompatible" >> ~/.vimrc
+#   echo "filetype on" >> ~/.vimrc
+#   echo "filetype plugin on" >> ~/.vimrc
+#   echo "filetype indent on" >> ~/.vimrc
+
+#  SHELL
 end
