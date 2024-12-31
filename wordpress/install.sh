@@ -26,12 +26,12 @@ systemctl enable mariadb
 mysqladmin create wordpress
 
 # Create a user for the wordpress database
-mysql -e "GRANT ALL on wordpress.* to wordpress@localhost identified by 'wordpress123';"
+mysql -e "GRANT ALL on wordpress.* to wordpress@localhost identified by '<password>';"
 mysql -e "FLUSH PRIVILEGES;"
 
 # Secure MariaDB with echo key presses
 echo "Running Mysql_secure_installation..."
-echo -e "\n\nrootpassword123\nrootpassword123\n\n\n\n\n" | mysql_secure_installation
+echo -e "\n\n<password>\n<password>\n\n\n\n\n" | mysql_secure_installation
 
 # Download and extract Wordpress
 echo "Downloading and installing Wordpress"
@@ -52,7 +52,7 @@ chmod 755 /usr/local/bin/wp
 
 # Configure wordpress
 cd /var/www/html
-/usr/local/bin/wp core config --dbname=wordpress --dbuser=wordpress --dbpass=wordpress123
+/usr/local/bin/wp core config --dbname=wordpress --dbuser=wordpress --dbpass=<password>
 
 # Install wordpress
 /usr/local/bin/wp core install --url=http://10.23.45.60 --title="Blog" --admin_user="admin" --admin_password="admin" \

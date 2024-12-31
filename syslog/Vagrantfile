@@ -1,0 +1,22 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "jasonc/centos8"
+  config.vm.hostname = "syslog"
+  config.vm.network "private_network", ip: "10.23.45.50"
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "3072"
+  end
+  
+ config.vm.provision "shell", inline: <<-SHELL
+  echo "syntax on" > ~/.vimrc
+  echo "set nocompatible" >> ~/.vimrc
+  echo "filetype on" >> ~/.vimrc
+  echo "filetype plugin on" >> ~/.vimrc
+  echo "filetype indent on" >> ~/.vimrc
+
+ SHELL
+end
