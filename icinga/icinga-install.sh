@@ -7,13 +7,21 @@ then
 fi
 
 
-# dnf install -y httpd php php-gd php-intl php-ldap php-opcache
+dnf install -y httpd php php-gd php-intl php-ldap php-opcache
+
 # cp /etc/php.ini /etc/php.ini.bak
 # vi /etc/php.ini
-# systemctl enable --now httpd
-# dnf install -y mariadb-server
-# systemctl enable --now mariadb
-# mysql_secure_installation
+
+systemctl enable --now httpd
+
+dnf install -y mariadb-server
+systemctl start mariadb-server
+systemctl enable mariadb-server
+
+### mysql_secure_installation using the echo input
+echo "Running Mysql_secure_installation..."
+echo -e "\n\nPassword-to-change\nPassword-to-change\n\n\n\n\n" | mysql_secure_installation
+
 # mysqladmin -u root -p create icinga
 # mysqladmin -u root -p create icingaweb
 # mysql -u root -p

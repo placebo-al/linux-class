@@ -6,16 +6,16 @@ then
 	exit 1
 fi
 
-sudo dnf install -y httpd php php-mysqlnd php-gd php-mbstring php-json php-xml
+dnf install -y httpd php php-mysqlnd php-gd php-mbstring php-json php-xml
 
-sudo systemctl start httpd
-sudo systemctl enable httpd
+systemctl start httpd
+systemctl enable httpd
 
-sudo dnf install -y mariadb-server
-sudo systemctl start mariadb-server
-sudo systemctl enable mariadb-server
+dnf install -y mariadb-server
+systemctl start mariadb-server
+systemctl enable mariadb-server
 
-sudo mysql_secure_installation
+### mysql_secure_installation using the echo input
 echo "Running Mysql_secure_installation..."
 echo -e "\n\nPassword-to-change\nPassword-to-change\n\n\n\n\n" | mysql_secure_installation
 
