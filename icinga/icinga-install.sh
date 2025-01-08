@@ -10,7 +10,7 @@ fi
 dnf install -y httpd php php-gd php-intl php-ldap php-opcache
 
 # cp /etc/php.ini /etc/php.ini.bak
-# vi /etc/php.ini
+# vi /etc/php.ini			# Change to what the edit is
 
 systemctl enable --now httpd
 
@@ -22,16 +22,17 @@ systemctl enable mariadb
 echo "Running Mysql_secure_installation..."
 echo -e "\n\nPassword-to-change\nPassword-to-change\n\n\n\n\n" | mysql_secure_installation
 
-# mysqladmin -u root -p create icinga
-# mysqladmin -u root -p create icingaweb
+mysqladmin -u root -pPassword123 create icinga
+mysqladmin -u root -pPassword123 create icingaweb
+
 # mysql -u root -p
 
 dnf install -y http://mirror.linuxtrainingacademy.com/icinga/icinga-rpm-release.noarch.rpm
 dnf install -y icinga2 icingaweb2 icingacli icinga2-ido-mysql
 
-# mysql -u root -p icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
-# mysqlshow -u root -p icinga
-# vi /etc/icinga2/features-available/ido-mysql.conf
+# mysql -u root -pPassword123 icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+# mysqlshow -u root -pPassword123 icinga		# Not really useful
+# vi /etc/icinga2/features-available/ido-mysql.conf		# Change to what the edit is
 
 icinga2 feature enable ido-mysql
 icinga2 feature list
