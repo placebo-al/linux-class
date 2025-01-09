@@ -8,13 +8,13 @@ fi
 
 # Install apache and php
 dnf install -y httpd php php-mysqlnd
-sudo systemctl start httpd
-sudo systemctl enable httpd
+systemctl start httpd
+systemctl enable httpd
 
 # Install Mariadb
 dnf install -y mariadb-server
-sudo systemctl start mariadb
-sudo systemctl enable mariadb
+systemctl start mariadb
+systemctl enable mariadb
 
 ### mysql_secure_installation using the echo input
 echo "Running Mysql_secure_installation..."
@@ -25,4 +25,14 @@ mysqladmin -u root -pPassword123 create hesk
 
 mysql -u root -pPassword123 -e "GRANT ALL on hesk.* to hesk@localhost identified by 'Password123'"
 mysql -u root -pPassword123 -e "FLUSH PRIVILEGES;"
+
+curl -LO http://mirror.linuxtrainingacademy.com/hesk/hesk.zip
+
+cd /var/www/html
+unzip /home/vagrant/hesk.zip
+
+chown apache hesk_settings.inc.php
+chown apache attachments
+chown apache cache
+chown apache language/en/emails
 
