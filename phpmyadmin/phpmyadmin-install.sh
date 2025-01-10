@@ -38,3 +38,4 @@ $cfg['blowfish_secret'] = "$value";
 mkdir /var/www/html/tmp
 chown apache /var/www/html/tmp
 
+# From here we need the web edit
