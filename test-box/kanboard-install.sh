@@ -28,11 +28,12 @@ mysql -u root -pPassword123 -e "GRANT ALL on kanboard.* to kanboard@localhost id
 mysql -u root -pPassword123 -e "FLUSH PRIVILEGES;"
 
 
-curl -LO http://mirror.linuxtrainingacademy.com/kanboard/kanboard-v1.2.15.zip
+# curl -L http://mirror.linuxtrainingacademy.com/kanboard/kanboard-v1.2.15.zip -o kanboard.zip
+curl -L https://github.com/kanboard/kanboard/archive/refs/tags/v1.2.15.zip --output kanboard.zip
 
-unzip kanboard-v1.2.15.zip
+unzip kanboard.zip
 
-mv kanboard-1.2.15/* /var/www/html/
+mv kanboard*/* /var/www/html/
 
 
 echo "<?php
