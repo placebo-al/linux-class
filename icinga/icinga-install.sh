@@ -113,6 +113,7 @@ object IdoMysqlConnection "ido-mysql" {
     database = "$ICINGA_DB"
 }
 EOL
+
 icinga2 feature enable ido-mysql
 
 
