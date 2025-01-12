@@ -8,19 +8,21 @@ fi
 
 # Install Apache, PHP, and PHP modules
 echo "Installing Apache and PHP..."
-dnf -q install -y httpd php php-mysqlnd php-json
+dnf -q install -y httpd php php-mysqlnd php-json mariadb-server
 
-# Start and enable the web server
-systemctl start httpd
-systemctl enable httpd
+# Start and enable Apache services
+systemctl start httpd && systemctl enable httpd
+if ! systemctl is-active --quiet httpd; then
+    echo "Failed to start Apache."
+    exit 1
+fi
 
-# Install Mariadb
-echo "Installing MariaDB..."
-dnf -q install -y mariadb-server
-
-# Start and enable MariaDB
-systemctl start mariadb
-systemctl enable mariadb
+# Start and enable Mariadb services
+systemctl start mariadb && systemctl enable mariadb
+if ! systemctl is-active --quiet mariadb; then
+    echo "Failed to start MariaDB."
+    exit 1
+fi
 
 # Create a wordpress database
 mysqladmin create wordpress
@@ -29,9 +31,33 @@ mysqladmin create wordpress
 mysql -e "GRANT ALL on wordpress.* to wordpress@localhost identified by '<password>';"
 mysql -e "FLUSH PRIVILEGES;"
 
-# Secure MariaDB with echo key presses
-echo "Running Mysql_secure_installation..."
-echo -e "\n\n<password>\n<password>\n\n\n\n\n" | mysql_secure_installation
+# # Secure MariaDB with echo key presses
+# echo "Running Mysql_secure_installation..."
+# echo -e "\n\n<password>\n<password>\n\n\n\n\n" | mysql_secure_installation
+
+# Secure Mariadb installation
+echo "Securing MariaDB..."
+yum install -y expect
+expect <<EOF
+spawn mysql_secure_installation
+expect "Enter current password for root (enter for none):"
+send "\r"
+expect "Set root password? [Y/n]"
+send "Y\r"
+expect "New password:"
+send "$ROOT_PASSWORD\r"
+expect "Re-enter new password:"
+send "$ROOT_PASSWORD\r"
+expect "Remove anonymous users? [Y/n]"
+send "Y\r"
+expect "Disallow root login remotely? [Y/n]"
+send "Y\r"
+expect "Remove test database and access to it? [Y/n]"
+send "Y\r"
+expect "Reload privilege tables now? [Y/n]"
+send "Y\r"
+expect eof
+EOF
 
 # Download and extract Wordpress
 echo "Downloading and installing Wordpress"
