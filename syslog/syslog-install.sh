@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Variables
-
 ELASTIC_SEARCH="/etc/elasticsearch/elasticsearch.yml"
 SYSLOG_CONFIG="/etc/logstash/conf.d/syslog.conf"
 KIBANA_CONFIG="/etc/kibana/kibana.yml"

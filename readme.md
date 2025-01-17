@@ -4,6 +4,7 @@ Using Vagrant we can automate the set up of a complete network and monitoring of
 
 Currently the configuration we have is:
 Testbox01   10.23.45.10
+Hesk        10.23.45.20
 Kanboard    10.23.45.25
 Icinga      10.23.45.30
 Phpmyadmin  10.23.45.35

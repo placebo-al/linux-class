@@ -34,31 +34,31 @@ fi
 
 ### mysql_secure_installation using the echo input
 # echo "Running Mysql_secure_installation..."
-# echo -e "\n\nPassword123\nPassword123\n\n\n\n\n" | mysql_secure_installation
+echo -e "\n\nPassword123\nPassword123\n\n\n\n\n" | mysql_secure_installation
 
 # Secure Mariadb installation
-echo "Securing MariaDB..."
-yum install -y expect
-expect <<EOF
-spawn mysql_secure_installation
-expect "Enter current password for root (enter for none):"
-send "\r"
-expect "Set root password? [Y/n]"
-send "Y\r"
-expect "New password:"
-send "$ROOT_PASSWORD\r"
-expect "Re-enter new password:"
-send "$ROOT_PASSWORD\r"
-expect "Remove anonymous users? [Y/n]"
-send "Y\r"
-expect "Disallow root login remotely? [Y/n]"
-send "Y\r"
-expect "Remove test database and access to it? [Y/n]"
-send "Y\r"
-expect "Reload privilege tables now? [Y/n]"
-send "Y\r"
-expect eof
-EOF
+# echo "Securing MariaDB..."
+# yum install -y expect
+# expect <<EOF
+# spawn mysql_secure_installation
+# expect "Enter current password for root (enter for none):"
+# send "\r"
+# expect "Set root password? [Y/n]"
+# send "Y\r"
+# expect "New password:"
+# send "${ROOT_PASSWORD}\r"
+# expect "Re-enter new password:"
+# send "${ROOT_PASSWORD}\r"
+# expect "Remove anonymous users? [Y/n]"
+# send "Y\r"
+# expect "Disallow root login remotely? [Y/n]"
+# send "Y\r"
+# expect "Remove test database and access to it? [Y/n]"
+# send "Y\r"
+# expect "Reload privilege tables now? [Y/n]"
+# send "Y\r"
+# expect eof
+# EOF
 
 # mysqladmin -u root -pPassword123 create kanboard
 # mysql -u root -pPassword123 -e "GRANT ALL on kanboard.* to kanboard@localhost identified by 'Password123';"
@@ -66,9 +66,27 @@ EOF
 
 # Create Kanboard database and user
 echo "Setting up the Kanboard database..."
-mysqladmin -u root -p"$ROOT_PASSWORD" create "$KANBOARD_DB"
-mysql -u root -p"$ROOT_PASSWORD" -e "GRANT ALL ON $KANBOARD_DB.* TO '$KANBOARD_USER'@'localhost' IDENTIFIED BY '$KANBOARD_PASSWORD';"
-mysql -u root -p"$ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
+# mysqladmin -u root -p"$ROOT_PASSWORD" create "$KANBOARD_DB"
+# mysql -u root -p"$ROOT_PASSWORD" -e "GRANT ALL ON $KANBOARD_DB.* TO '$KANBOARD_USER'@'localhost' IDENTIFIED BY '$KANBOARD_PASSWORD';"
+# mysql -u root -p"$ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
+
+mysqladmin -u root -p"${ROOT_PASSWORD}" create "${KANBOARD_DB}"
+if [ $? -ne 0 ]; then
+    echo "Failed to create database ${KANBOARD_DB}"
+    exit 1
+fi
+
+mysql -u root -p"${ROOT_PASSWORD}" -e "GRANT ALL ON ${KANBOARD_DB}.* TO '${KANBOARD_USER}'@'localhost' IDENTIFIED BY '${KANBOARD_PASSWORD}';"
+if [ $? -ne 0 ]; then
+    echo "Failed to grant privileges on ${KANBOARD_DB} to ${KANBOARD_USER}"
+    exit 1
+fi
+
+mysql -u root -p"${ROOT_PASSWORD}" -e "FLUSH PRIVILEGES;"
+if [ $? -ne 0 ]; then
+    echo "Failed to flush privileges in MySQL"
+    exit 1
+fi
 
 
 # Download and install Kanboard

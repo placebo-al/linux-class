@@ -9,5 +9,6 @@ config.vm.define "kanboard" do |kanboard|
   kanboard.vm.network "private_network", ip: "10.23.45.25"
   kanboard.vm.provision "shell", path: "kanboard-install.sh"
   kanboard.vm.box_check_update = false
- 
+  end
+  
 end
