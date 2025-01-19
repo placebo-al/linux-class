@@ -124,4 +124,20 @@ chmod -R 755 "$KANBOARD_INSTALL_DIR"
 
 echo "Kanboard setup is complete. Access it at http://10.23.45.25/"
 
+# Install monitoring and send metrics to Grafana
+
+#  sudo dnf install -y http://mirror.linuxtrainingacademy.com/grafana/telegraf-1.15.3-1.x86_64.rpm
+
+# sudo nano /etc/telegraf/telegraf.conf
+
+# Needs to go below "[[outputs.inuxdb]]" 
+
+# [[outputs.influxdb]]
+# urls = ["http://10.23.45.40:8086"]
+
+
+# config_file="/etc/telegraf/telegraf.conf"
+# sed -i '/^# \[\[inputs\.\(conntrack\|internal\|interrupts\|linux_sysctl_fs\|net\|netstat\|nstat\)\]\]/s/^# //' $config_file
+
+# systemctl start telegraf && systemctl enable telegraf
 
