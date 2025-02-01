@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables for configuration
-ROOT_PASSWORD="Password123"
+export ROOT_PASSWORD="Password123"
 ICINGA_DB="icinga"
 ICINGA_USER="icinga"
 ICINGA_PASSWORD="Password123"
@@ -21,67 +21,6 @@ fi
 echo "Installing required packages..."
 dnf install -y httpd php php-gd php-intl php-ldap php-opcache mariadb-server expect
 
-# Configure PHP
-echo "Configuring PHP..."
-cp /etc/php.ini /etc/php.ini.bak
-sed -i "s#^;date\.timezone =#date.timezone = \"$TIMEZONE\"#" /etc/php.ini
-
-# Start and enable Apache services
-systemctl start httpd && systemctl enable httpd
-if ! systemctl is-active --quiet httpd; then
-    echo "Failed to start Apache."
-    exit 1
-fi
-
-# Start and enable Mariadb services
-systemctl start mariadb && systemctl enable mariadb
-if ! systemctl is-active --quiet mariadb; then
-    echo "Failed to start MariaDB."
-    exit 1
-fi
-
-# Secure Mariadb installation
-echo "Securing MariaDB..."
-yum install -y expect
-expect <<EOF
-spawn mysql_secure_installation
-expect "Enter current password for root (enter for none):"
-send "\r"
-expect "Set root password? [Y/n]"
-send "Y\r"
-expect "New password:"
-send "$ROOT_PASSWORD\r"
-expect "Re-enter new password:"
-send "$ROOT_PASSWORD\r"
-expect "Remove anonymous users? [Y/n]"
-send "Y\r"
-expect "Disallow root login remotely? [Y/n]"
-send "Y\r"
-expect "Remove test database and access to it? [Y/n]"
-send "Y\r"
-expect "Reload privilege tables now? [Y/n]"
-send "Y\r"
-expect eof
-EOF
-
-
-# mysqladmin -u root -p"$ROOT_PASSWORD" create icinga
-# mysqladmin -u root -p"$ROOT_PASSWORD" create icingaweb
-
-# mysql -u root -p"$ROOT_PASSWORD" -e 'GRANT ALL on icinga.* to icinga@localhost identified by "$ICINGA_PASSWORD";'
-# mysql -u root -p"$ROOT_PASSWORD" -e 'GRANT ALL on icingaweb.* to icingaweb@localhost identified by "$ICINGAWEB_PASSWORD";'
-# mysql -u root -p"$ROOT_PASSWORD" -e 'FLUSH PRIVILEGES;'
-
-# Create databases and users
-echo "Creating databases and users..."
-mysql -u root -p"$ROOT_PASSWORD" <<MYSQL_SCRIPT
-CREATE DATABASE $ICINGA_DB;
-CREATE DATABASE $ICINGAWEB_DB;
-GRANT ALL ON $ICINGA_DB.* TO '$ICINGA_USER'@'localhost' IDENTIFIED BY '$ICINGA_PASSWORD';
-GRANT ALL ON $ICINGAWEB_DB.* TO '$ICINGAWEB_USER'@'localhost' IDENTIFIED BY '$ICINGAWEB_PASSWORD';
-FLUSH PRIVILEGES;
-MYSQL_SCRIPT
-
 # Install Icinga2 and related packages
 echo "Installing Icinga2..."
 dnf install -y http://mirror.linuxtrainingacademy.com/icinga/icinga-rpm-release.noarch.rpm
@@ -90,10 +29,70 @@ dnf install -y icinga2 icingaweb2 icingacli icinga2-ido-mysql
 # sudo dnf -y install https://packages.icinga.com/epel/icinga-rpm-release-8-latest.noarch.rpm
 # dnf install -y https://packages.icinga.com/centos/8/release/x86_64/icinga2/icinga2-2.13.10-1.el8.x86_64.rpm
 
+echo "Installing monitoring plugins..."
+dnf install -y epel-release
+dnf config-manager --set-enabled powertools
+dnf install -y nagios-plugins-all
+
+
+# Configure PHP
+echo "Configuring PHP..."
+cp /etc/php.ini /etc/php.ini.bak
+sed -i "s#^;date\.timezone =#date.timezone = \"$TIMEZONE\"#" /etc/php.ini
+
+# Start and enable Apache services
+systemctl start httpd && systemctl enable httpd
+if ! systemctl is-active --quiet httpd; then
+    echo "Failed to start Apache." > /dev/error
+    exit 1
+fi
+
+# Start and enable Mariadb services
+systemctl start mariadb && systemctl enable mariadb
+if ! systemctl is-active --quiet mariadb; then
+    echo "Failed to start MariaDB." > /dev/error
+    exit 1
+fi
+
+# Secure Mariadb installation
+# echo "Securing MariaDB..."
+# echo ""
+# echo "Running MySQL Secure Installation..."
+# echo ""
+# expect -d <<EOF 2>&1 | tee mysql_debug.log
+# spawn mysql_secure_installation
+# expect {
+#     -re "Enter current password for root.*:" { send "\r"; exp_continue }
+#     -re "Set root password.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
+#     -re "New password:" { send "Password123\r"; exp_continue }
+#     -re "Re-enter new password:" { send "Password123\r"; exp_continue }
+#     -re "Remove anonymous users.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
+#     -re "Disallow root login remotely.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
+#     -re "Remove test database and access to it.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
+#     -re "Reload privilege tables now.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
+# }
+# expect eof
+# EOF
+
+# This method actually works, can't say the same for expect :-(
+echo -e "\n\n${ROOT_PASSWORD}\n${ROOT_PASSWORD}\n\n\n\n\n" | mysql_secure_installation
+
+# Create databases and users
+
+mysql -u root --password="${ROOT_PASSWORD}" <<EOF
+CREATE DATABASE icinga;
+CREATE DATABASE icingaweb;
+CREATE USER 'icinga'@'localhost' IDENTIFIED BY '$ICINGA_PASSWORD';
+CREATE USER 'icingaweb'@'localhost' IDENTIFIED BY '$ICINGAWEB_PASSWORD';
+GRANT ALL PRIVILEGES ON icinga.* TO 'icinga'@'localhost';
+GRANT ALL PRIVILEGES ON icingaweb.* TO 'icingaweb'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+
 
 # Configure the Icinga2 database
 echo "Configuring the Icinga2 database..."
-mysql -u root -p"$ROOT_PASSWORD" $ICINGA_DB < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+mysql -u root --password="${ROOT_PASSWORD}" icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
 
 
 # To test the install run: mysqlshow -u root -p icinga
@@ -117,54 +116,94 @@ EOL
 icinga2 feature enable ido-mysql
 
 
-# Install and configure plugins
-echo "Installing monitoring plugins..."
-dnf install -y epel-release
-dnf config-manager --set-enabled powertools
-dnf install -y nagios-plugins-all
-
-# icinga2 node wizard
-# echo -e "n\n\n\n\n\nn" | icinga2 node wizard
-
 # Run Icinga2 node wizard using expect
 echo "Configuring Icinga2 node wizard..."
-expect <<EOF
-spawn icinga2 node wizard
-expect "Please specify if this is a satellite setup ('n' installs a master setup) [Y/n]:"
-send "n\r"
-expect "Please specify the common name (CN) [icinga]:"
-send "\r"
-expect "Master zone name [master]:"
-send "\r"
-expect "Do you want to specify additional global zones? [y/N]:"
-send "\r"
-expect "Bind Host []:"
-send "\r"
-expect "Bind Port []:"
-send "\r"
-expect "Do you want to disable the inclusion of the conf.d directory [Y/n]:"
-send "n\r"
-expect eof
-EOF
+echo ""
+# expect -d 2>&1 | tee icinga_debug.log <<EOF
+# spawn icinga2 node wizard
+# expect {
+#     -re "Please specify if this is a satellite setup \\('\\w+' installs a master setup\\) \\[Y/n\\]:" { send "n\r" }
+# }
+# expect {
+#     -re "Please specify the common name \\(CN\\) \\[icinga\\]:" { send "\r" }
+# }
+# expect {
+#     -re "Master zone name \\[master\\]:" { send "\r" }
+# }
+# expect {
+#     -re "Do you want to specify additional global zones\\? \\[y/N\\]:" { send "N\r" }
+# }
+# expect {
+#     -re "Bind Host \\[\\]:" { send "\r" }
+# }
+# expect {
+#     -re "Bind Port \\[\\]:" { send "\r" }
+# }
+# expect {
+#     -re "Do you want to disable the inclusion of the conf\\.d directory\\? \\[Y/n\\]:" { send "n\r" }
+# }
+# expect eof
+# EOF
+echo -e "n\n\n\nN\n\n\nn\n" | icinga2 node wizard
+
 
 # Start and enable Icinga2
 echo "Starting and enabling Icinga2..."
 systemctl start icinga2 && systemctl enable icinga2
+if ! systemctl is-active --quiet icinga2; then
+    echo "Failed to start Icinga2." > /dev/error
+    exit 1
+fi
+
 systemctl restart httpd
+if ! systemctl is-active --quiet httpd; then
+    echo "Failed to start Httpd." > /dev/error
+    exit 1
+fi
 
 
 # Output additional setup instructions
 echo "Icinga2 setup complete."
+printf '%.0s-' {1..60}; echo
 echo "Visit the web interface at http://10.23.45.30/icingaweb2/setup"
+printf '%.0s-' {1..60}; echo
+echo ""
 echo "Run the following commands to obtain the API password and setup token:"
+printf '%.0s-' {1..60}; echo
 echo "  cat /etc/icinga2/conf.d/api-users.conf"
+printf '%.0s-' {1..60}; echo
 echo "  icingacli setup token create"
+printf '%.0s-' {1..60}; echo
+echo ""
+echo "Going to add the influxdb logging"
 
 
-# Web page set up
+icinga2 feature enable influxdb
 
-# Refer to notes
+influx_file="/etc/icinga2/features-enabled/influxdb.conf"
 
+sed -i '/object InfluxdbWriter "influxdb"/a \
+host = "10.23.45.40"\
+database = "icinga2"\
+enable_send_metadata = true' "$influx_file"
 
+systemctl restart icinga2
 
- 
+echo ""
+printf '%.0s-' {1..60}; echo
+echo "Install monitoring and configure sending metrics to Grafana"
+printf '%.0s-' {1..60}; echo
+echo ""
+
+dnf install -y http://mirror.linuxtrainingacademy.com/grafana/telegraf-1.15.3-1.x86_64.rpm
+
+telegraf_file="/etc/telegraf/telegraf.conf"
+
+sed -i '/\[\[outputs\.influxdb\]\]/a\urls = ["http://10.23.45.40:8086"]' $telegraf_file
+sed -i '/^# \[\[inputs\.\(conntrack\|internal\|interrupts\|linux_sysctl_fs\|net\|netstat\|nstat\)\]\]/s/^# //' $telegraf_file
+
+systemctl start telegraf && systemctl enable telegraf
+if ! systemctl is-active --quiet telegraf; then
+    echo "Failed to start Telegraf."
+    exit 1
+fi

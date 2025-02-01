@@ -6,7 +6,7 @@ KANBOARD_DB="kanboard"
 KANBOARD_USER="kanboard"
 KANBOARD_PASSWORD="Password123"
 KANBOARD_URL="https://github.com/kanboard/kanboard/archive/refs/tags/v1.2.15.zip"
-# Back up link: http://mirror.linuxtrainingacademy.com/kanboard/kanboard-v1.2.15.zip
+# KANBOARD_URL="http://mirror.linuxtrainingacademy.com/kanboard/kanboard-v1.2.15.zip"
 KANBOARD_ZIP="kanboard.zip"
 KANBOARD_INSTALL_DIR="/var/www/html"
 
@@ -21,14 +21,14 @@ dnf install -y httpd php php-mysqlnd php-gd php-mbstring php-json php-xml mariad
 # Start and enable Apache services
 systemctl start httpd && systemctl enable httpd
 if ! systemctl is-active --quiet httpd; then
-    echo "Failed to start Apache."
+    echo "Failed to start Apache." > /dev/stderr
     exit 1
 fi
 
 # Start and enable Mariadb services
 systemctl start mariadb && systemctl enable mariadb
 if ! systemctl is-active --quiet mariadb; then
-    echo "Failed to start MariaDB."
+    echo "Failed to start MariaDB." > /dev/stderr
     exit 1
 fi
 
@@ -36,6 +36,7 @@ fi
 # echo "Running Mysql_secure_installation..."
 echo -e "\n\nPassword123\nPassword123\n\n\n\n\n" | mysql_secure_installation
 
+# Not working as expected
 # Secure Mariadb installation
 # echo "Securing MariaDB..."
 # yum install -y expect
@@ -122,22 +123,21 @@ EOL
 chown -R apache:apache "$KANBOARD_INSTALL_DIR"
 chmod -R 755 "$KANBOARD_INSTALL_DIR"
 
-echo "Kanboard setup is complete. Access it at http://10.23.45.25/"
+echo "Kanboard setup is complete."
+echo "Access it at http://10.23.45.25/"
+echo ""
+echo "Install monitoring and configure sending metrics to Grafana"
 
-# Install monitoring and send metrics to Grafana
+sudo dnf install -y http://mirror.linuxtrainingacademy.com/grafana/telegraf-1.15.3-1.x86_64.rpm
 
-#  sudo dnf install -y http://mirror.linuxtrainingacademy.com/grafana/telegraf-1.15.3-1.x86_64.rpm
+config_file="/etc/telegraf/telegraf.conf"
 
-# sudo nano /etc/telegraf/telegraf.conf
+sed -i '/\[\[outputs\.influxdb\]\]/a\urls = ["http://10.23.45.40:8086"]' $config_file
+sed -i '/^# \[\[inputs\.\(conntrack\|internal\|interrupts\|linux_sysctl_fs\|net\|netstat\|nstat\)\]\]/s/^# //' $config_file
 
-# Needs to go below "[[outputs.inuxdb]]" 
-
-# [[outputs.influxdb]]
-# urls = ["http://10.23.45.40:8086"]
-
-
-# config_file="/etc/telegraf/telegraf.conf"
-# sed -i '/^# \[\[inputs\.\(conntrack\|internal\|interrupts\|linux_sysctl_fs\|net\|netstat\|nstat\)\]\]/s/^# //' $config_file
-
-# systemctl start telegraf && systemctl enable telegraf
+systemctl start telegraf && systemctl enable telegraf
+if ! systemctl is-active --quiet telegraf; then
+    echo "Failed to start Telegraf." > /dev/stderr
+    exit 1
+fi
 
