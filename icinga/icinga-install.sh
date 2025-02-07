@@ -2,11 +2,7 @@
 
 # Variables for configuration
 export ROOT_PASSWORD="Password123"
-ICINGA_DB="icinga"
-ICINGA_USER="icinga"
 ICINGA_PASSWORD="Password123"
-ICINGAWEB_DB="icingaweb"
-ICINGAWEB_USER="icingaweb"
 ICINGAWEB_PASSWORD="Password123"
 TIMEZONE="Australia/Sydney"
 
@@ -54,25 +50,6 @@ if ! systemctl is-active --quiet mariadb; then
     exit 1
 fi
 
-# Secure Mariadb installation
-# echo "Securing MariaDB..."
-# echo ""
-# echo "Running MySQL Secure Installation..."
-# echo ""
-# expect -d <<EOF 2>&1 | tee mysql_debug.log
-# spawn mysql_secure_installation
-# expect {
-#     -re "Enter current password for root.*:" { send "\r"; exp_continue }
-#     -re "Set root password.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
-#     -re "New password:" { send "Password123\r"; exp_continue }
-#     -re "Re-enter new password:" { send "Password123\r"; exp_continue }
-#     -re "Remove anonymous users.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
-#     -re "Disallow root login remotely.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
-#     -re "Remove test database and access to it.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
-#     -re "Reload privilege tables now.*\\[Y/n\\]:" { send "Y\r"; exp_continue }
-# }
-# expect eof
-# EOF
 
 # This method actually works, can't say the same for expect :-(
 echo -e "\n\n${ROOT_PASSWORD}\n${ROOT_PASSWORD}\n\n\n\n\n" | mysql_secure_installation
@@ -119,31 +96,7 @@ icinga2 feature enable ido-mysql
 # Run Icinga2 node wizard using expect
 echo "Configuring Icinga2 node wizard..."
 echo ""
-# expect -d 2>&1 | tee icinga_debug.log <<EOF
-# spawn icinga2 node wizard
-# expect {
-#     -re "Please specify if this is a satellite setup \\('\\w+' installs a master setup\\) \\[Y/n\\]:" { send "n\r" }
-# }
-# expect {
-#     -re "Please specify the common name \\(CN\\) \\[icinga\\]:" { send "\r" }
-# }
-# expect {
-#     -re "Master zone name \\[master\\]:" { send "\r" }
-# }
-# expect {
-#     -re "Do you want to specify additional global zones\\? \\[y/N\\]:" { send "N\r" }
-# }
-# expect {
-#     -re "Bind Host \\[\\]:" { send "\r" }
-# }
-# expect {
-#     -re "Bind Port \\[\\]:" { send "\r" }
-# }
-# expect {
-#     -re "Do you want to disable the inclusion of the conf\\.d directory\\? \\[Y/n\\]:" { send "n\r" }
-# }
-# expect eof
-# EOF
+
 echo -e "n\n\n\nN\n\n\nn\n" | icinga2 node wizard
 
 
