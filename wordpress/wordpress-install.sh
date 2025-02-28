@@ -32,32 +32,32 @@ mysql -e "GRANT ALL on wordpress.* to wordpress@localhost identified by '<passwo
 mysql -e "FLUSH PRIVILEGES;"
 
 # # Secure MariaDB with echo key presses
-# echo "Running Mysql_secure_installation..."
-# echo -e "\n\n<password>\n<password>\n\n\n\n\n" | mysql_secure_installation
+echo "Running Mysql_secure_installation..."
+echo -e "\n\n${ROOT_PASSWORD}\n${ROOT_PASSWORD}\n\n\n\n\n" | mysql_secure_installation
 
 # Secure Mariadb installation
-echo "Securing MariaDB..."
-yum install -y expect
-expect <<EOF
-spawn mysql_secure_installation
-expect "Enter current password for root (enter for none):"
-send "\r"
-expect "Set root password? [Y/n]"
-send "Y\r"
-expect "New password:"
-send "$ROOT_PASSWORD\r"
-expect "Re-enter new password:"
-send "$ROOT_PASSWORD\r"
-expect "Remove anonymous users? [Y/n]"
-send "Y\r"
-expect "Disallow root login remotely? [Y/n]"
-send "Y\r"
-expect "Remove test database and access to it? [Y/n]"
-send "Y\r"
-expect "Reload privilege tables now? [Y/n]"
-send "Y\r"
-expect eof
-EOF
+# echo "Securing MariaDB..."
+# yum install -y expect
+# expect <<EOF
+# spawn mysql_secure_installation
+# expect "Enter current password for root (enter for none):"
+# send "\r"
+# expect "Set root password? [Y/n]"
+# send "Y\r"
+# expect "New password:"
+# send "$ROOT_PASSWORD\r"
+# expect "Re-enter new password:"
+# send "$ROOT_PASSWORD\r"
+# expect "Remove anonymous users? [Y/n]"
+# send "Y\r"
+# expect "Disallow root login remotely? [Y/n]"
+# send "Y\r"
+# expect "Remove test database and access to it? [Y/n]"
+# send "Y\r"
+# expect "Reload privilege tables now? [Y/n]"
+# send "Y\r"
+# expect eof
+# EOF
 
 # Download and extract Wordpress
 echo "Downloading and installing Wordpress"
